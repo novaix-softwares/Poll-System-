@@ -1,0 +1,1360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VoteNow | Interactive Poll & Voting System</title>
+    <meta name="description" content="Create, vote, and track polls in real-time with beautiful visualizations. Fully responsive voting system with no signup required.">
+    <meta name="keywords" content="poll, voting, survey, opinion, chart, results, interactive">
+    <meta name="author" content="VoteNow">
+    
+    <!-- Structured Data for SEO -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "VoteNow Poll System",
+      "description": "Interactive polling and voting system with real-time results visualization",
+      "url": "https://votenow.example.com",
+      "applicationCategory": "UtilitiesApplication",
+      "operatingSystem": "Any",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD"
+      }
+    }
+    </script>
+    
+    <!-- Chart.js Library -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Font Awesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        /* CSS Reset & Base Styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        :root {
+            --primary-color: #4361ee;
+            --secondary-color: #3a0ca3;
+            --accent-color: #4cc9f0;
+            --success-color: #4ade80;
+            --warning-color: #f59e0b;
+            --danger-color: #ef4444;
+            --light-color: #f8f9fa;
+            --dark-color: #212529;
+            --gray-color: #6c757d;
+            --light-gray: #e9ecef;
+            --card-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+            --transition: all 0.3s ease;
+        }
+
+        /* Dark Mode Variables */
+        .dark-mode {
+            --primary-color: #5a7dff;
+            --secondary-color: #4c1d95;
+            --accent-color: #06b6d4;
+            --light-color: #121826;
+            --dark-color: #f8f9fa;
+            --gray-color: #94a3b8;
+            --light-gray: #1e293b;
+            --card-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        body {
+            background-color: var(--light-color);
+            color: var(--dark-color);
+            line-height: 1.6;
+            transition: var(--transition);
+            min-height: 100vh;
+            padding-bottom: 2rem;
+        }
+
+        /* Container */
+        .container {
+            width: 90%;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 1rem;
+        }
+
+        /* Header & Navigation */
+        header {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 1.5rem 0;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .header-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-size: 1.75rem;
+            font-weight: 700;
+        }
+
+        .logo i {
+            color: var(--accent-color);
+        }
+
+        .nav-controls {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+        }
+
+        /* Theme Toggle */
+        .theme-toggle {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            width: 50px;
+            height: 26px;
+            border-radius: 13px;
+            position: relative;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .theme-toggle::after {
+            content: '';
+            position: absolute;
+            top: 3px;
+            left: 3px;
+            width: 20px;
+            height: 20px;
+            background-color: white;
+            border-radius: 50%;
+            transition: var(--transition);
+        }
+
+        .dark-mode .theme-toggle::after {
+            transform: translateX(24px);
+            background-color: var(--dark-color);
+        }
+
+        /* Main Layout */
+        .main-layout {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        @media (min-width: 992px) {
+            .main-layout {
+                grid-template-columns: 2fr 1fr;
+            }
+        }
+
+        /* Cards */
+        .card {
+            background-color: var(--light-color);
+            border-radius: 16px;
+            padding: 1.75rem;
+            box-shadow: var(--card-shadow);
+            transition: var(--transition);
+            border: 1px solid rgba(0, 0, 0, 0.05);
+        }
+
+        .dark-mode .card {
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+        }
+
+        .card-title {
+            font-size: 1.5rem;
+            margin-bottom: 1.25rem;
+            color: var(--primary-color);
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .card-title i {
+            color: var(--accent-color);
+        }
+
+        /* Form Styles */
+        .form-group {
+            margin-bottom: 1.25rem;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: var(--dark-color);
+        }
+
+        .input-field, .textarea-field {
+            width: 100%;
+            padding: 0.875rem 1rem;
+            border: 2px solid var(--light-gray);
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: var(--transition);
+            background-color: var(--light-color);
+            color: var(--dark-color);
+        }
+
+        .textarea-field {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        .input-field:focus, .textarea-field:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.2);
+        }
+
+        /* Poll Options */
+        .poll-option {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .option-input {
+            flex: 1;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--secondary-color);
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background-color: var(--light-gray);
+            color: var(--dark-color);
+        }
+
+        .btn-secondary:hover {
+            background-color: var(--gray-color);
+            color: white;
+        }
+
+        .btn-small {
+            padding: 0.5rem 1rem;
+            font-size: 0.875rem;
+        }
+
+        .btn-icon {
+            padding: 0.5rem;
+            border-radius: 8px;
+            width: 36px;
+            height: 36px;
+        }
+
+        .btn-danger {
+            background-color: var(--danger-color);
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background-color: #dc2626;
+        }
+
+        .btn-success {
+            background-color: var(--success-color);
+            color: white;
+        }
+
+        .btn-success:hover {
+            background-color: #22c55e;
+        }
+
+        /* Poll List */
+        .poll-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-top: 1.5rem;
+        }
+
+        .poll-card {
+            background-color: var(--light-color);
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+            transition: var(--transition);
+            border-left: 5px solid var(--primary-color);
+        }
+
+        .poll-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        }
+
+        .poll-question {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: var(--dark-color);
+        }
+
+        .poll-meta {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.875rem;
+            color: var(--gray-color);
+            margin-bottom: 1.25rem;
+        }
+
+        .poll-actions {
+            display: flex;
+            gap: 0.75rem;
+            margin-top: 1.25rem;
+        }
+
+        /* Voting Options */
+        .vote-option {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.875rem;
+            margin-bottom: 0.75rem;
+            background-color: var(--light-gray);
+            border-radius: 10px;
+            cursor: pointer;
+            transition: var(--transition);
+            border: 2px solid transparent;
+        }
+
+        .vote-option:hover {
+            background-color: rgba(67, 97, 238, 0.1);
+            border-color: var(--primary-color);
+        }
+
+        .vote-option.selected {
+            background-color: rgba(67, 97, 238, 0.15);
+            border-color: var(--primary-color);
+            font-weight: 600;
+        }
+
+        .vote-option input {
+            width: 20px;
+            height: 20px;
+        }
+
+        /* Results Visualization */
+        .results-container {
+            margin-top: 2rem;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 300px;
+            width: 100%;
+            margin: 1.5rem 0;
+        }
+
+        .result-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.875rem;
+            margin-bottom: 0.75rem;
+            background-color: var(--light-gray);
+            border-radius: 10px;
+            transition: var(--transition);
+        }
+
+        .result-item:hover {
+            transform: translateX(5px);
+        }
+
+        .result-label {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .result-bar {
+            height: 8px;
+            border-radius: 4px;
+            background-color: var(--primary-color);
+            margin-top: 0.5rem;
+            transition: width 1s ease;
+        }
+
+        .result-percentage {
+            font-weight: 700;
+            color: var(--primary-color);
+        }
+
+        /* Tabs */
+        .tabs {
+            display: flex;
+            border-bottom: 2px solid var(--light-gray);
+            margin-bottom: 1.5rem;
+        }
+
+        .tab {
+            padding: 0.75rem 1.5rem;
+            cursor: pointer;
+            font-weight: 600;
+            color: var(--gray-color);
+            border-bottom: 3px solid transparent;
+            transition: var(--transition);
+        }
+
+        .tab.active {
+            color: var(--primary-color);
+            border-bottom-color: var(--primary-color);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Footer */
+        footer {
+            text-align: center;
+            margin-top: 3rem;
+            padding-top: 2rem;
+            border-top: 1px solid var(--light-gray);
+            color: var(--gray-color);
+            font-size: 0.875rem;
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 3rem 1rem;
+            color: var(--gray-color);
+        }
+
+        .empty-state i {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            color: var(--light-gray);
+        }
+
+        /* Responsive Adjustments */
+        @media (max-width: 768px) {
+            .header-container {
+                flex-direction: column;
+                gap: 1rem;
+            }
+            
+            .poll-list {
+                grid-template-columns: 1fr;
+            }
+            
+            .tabs {
+                flex-direction: column;
+            }
+            
+            .tab {
+                text-align: center;
+                border-bottom: none;
+                border-left: 3px solid transparent;
+            }
+            
+            .tab.active {
+                border-bottom-color: transparent;
+                border-left-color: var(--primary-color);
+            }
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.5s ease forwards;
+        }
+
+        /* Toast Notification */
+        .toast {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            padding: 1rem 1.5rem;
+            background-color: var(--primary-color);
+            color: white;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            z-index: 1001;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            transform: translateY(100px);
+            opacity: 0;
+            transition: transform 0.3s ease, opacity 0.3s ease;
+        }
+
+        .toast.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        .toast-success {
+            background-color: var(--success-color);
+        }
+
+        .toast-error {
+            background-color: var(--danger-color);
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <div class="container header-container">
+            <div class="logo">
+                <i class="fas fa-vote-yea"></i>
+                <span>VoteNow</span>
+            </div>
+            <div class="nav-controls">
+                <button class="btn btn-secondary" id="viewPollsBtn">
+                    <i class="fas fa-poll"></i> View Polls
+                </button>
+                <button class="btn btn-primary" id="createPollBtn">
+                    <i class="fas fa-plus-circle"></i> Create Poll
+                </button>
+                <button class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode">
+                    <span class="sr-only">Toggle dark mode</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container">
+        <div class="tabs">
+            <div class="tab active" data-tab="create">Create Poll</div>
+            <div class="tab" data-tab="polls">All Polls</div>
+            <div class="tab" data-tab="vote">Vote Now</div>
+        </div>
+
+        <!-- Create Poll Tab -->
+        <div class="tab-content active" id="createTab">
+            <div class="card">
+                <h2 class="card-title">
+                    <i class="fas fa-plus-circle"></i> Create New Poll
+                </h2>
+                <form id="pollForm">
+                    <div class="form-group">
+                        <label for="pollQuestion">Poll Question</label>
+                        <input type="text" id="pollQuestion" class="input-field" placeholder="Enter your poll question..." required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Poll Options</label>
+                        <div id="pollOptions">
+                            <div class="poll-option">
+                                <input type="text" class="input-field option-input" placeholder="Option 1" required>
+                                <button type="button" class="btn btn-icon btn-danger remove-option" disabled>
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                            <div class="poll-option">
+                                <input type="text" class="input-field option-input" placeholder="Option 2" required>
+                                <button type="button" class="btn btn-icon btn-danger remove-option">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <button type="button" class="btn btn-secondary btn-small" id="addOption">
+                            <i class="fas fa-plus"></i> Add Option
+                        </button>
+                    </div>
+                    
+                    <div class="form-group">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-check-circle"></i> Create Poll
+                        </button>
+                    </div>
+                </form>
+            </div>
+            
+            <!-- Example Polls -->
+            <div class="card fade-in" style="margin-top: 2rem;">
+                <h2 class="card-title">
+                    <i class="fas fa-lightbulb"></i> Example Polls
+                </h2>
+                <p>Try voting on these example polls to see how the system works!</p>
+                
+                <div class="poll-list" id="examplePolls">
+                    <!-- Example polls will be loaded here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- All Polls Tab -->
+        <div class="tab-content" id="pollsTab">
+            <div class="card">
+                <h2 class="card-title">
+                    <i class="fas fa-list"></i> All Polls
+                </h2>
+                <div id="pollsList">
+                    <!-- Polls will be loaded here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Vote Tab -->
+        <div class="tab-content" id="voteTab">
+            <div class="main-layout">
+                <!-- Voting Section -->
+                <div class="card">
+                    <h2 class="card-title" id="voteQuestion">
+                        <i class="fas fa-vote-yea"></i> Vote on Poll
+                    </h2>
+                    <div id="voteOptions">
+                        <!-- Voting options will be loaded here -->
+                    </div>
+                    <div class="poll-actions">
+                        <button class="btn btn-primary" id="submitVoteBtn">
+                            <i class="fas fa-paper-plane"></i> Submit Vote
+                        </button>
+                        <button class="btn btn-secondary" id="viewResultsBtn">
+                            <i class="fas fa-chart-bar"></i> View Results
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Results Section -->
+                <div class="card">
+                    <h2 class="card-title">
+                        <i class="fas fa-chart-pie"></i> Live Results
+                    </h2>
+                    <div class="chart-container">
+                        <canvas id="resultsChart"></canvas>
+                    </div>
+                    <div id="resultsList">
+                        <!-- Results will be displayed here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="toast">
+        <i class="fas fa-check-circle"></i>
+        <span id="toastMessage">Your vote has been recorded!</span>
+    </div>
+
+    <!-- Footer -->
+    <footer class="container">
+        <p>VoteNow &copy; <span id="currentYear">2023</span> | Fully responsive polling system with real-time results</p>
+        <p>All data is stored locally in your browser. No signup required!</p>
+    </footer>
+
+    <script>
+        // DOM Elements
+        const themeToggle = document.getElementById('themeToggle');
+        const createPollBtn = document.getElementById('createPollBtn');
+        const viewPollsBtn = document.getElementById('viewPollsBtn');
+        const tabs = document.querySelectorAll('.tab');
+        const tabContents = document.querySelectorAll('.tab-content');
+        const pollForm = document.getElementById('pollForm');
+        const pollOptions = document.getElementById('pollOptions');
+        const addOptionBtn = document.getElementById('addOption');
+        const pollsList = document.getElementById('pollsList');
+        const examplePolls = document.getElementById('examplePolls');
+        const voteQuestion = document.getElementById('voteQuestion');
+        const voteOptions = document.getElementById('voteOptions');
+        const submitVoteBtn = document.getElementById('submitVoteBtn');
+        const viewResultsBtn = document.getElementById('viewResultsBtn');
+        const resultsChart = document.getElementById('resultsChart');
+        const resultsList = document.getElementById('resultsList');
+        const toast = document.getElementById('toast');
+        const toastMessage = document.getElementById('toastMessage');
+        
+        // Chart.js instance
+        let chart = null;
+        
+        // Current poll being voted on
+        let currentPollId = null;
+        let selectedOption = null;
+        
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', function() {
+            // Set current year in footer
+            document.getElementById('currentYear').textContent = new Date().getFullYear();
+            
+            // Initialize theme
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            if (savedTheme === 'dark') {
+                document.body.classList.add('dark-mode');
+            }
+            
+            // Initialize example polls if none exist
+            if (!localStorage.getItem('polls')) {
+                initializeExamplePolls();
+            }
+            
+            // Load polls
+            loadPolls();
+            loadExamplePolls();
+            
+            // Set up event listeners
+            setupEventListeners();
+            
+            // Show create tab by default
+            showTab('create');
+            
+            // Display a welcome toast
+            showToast('Welcome to VoteNow! Create your first poll or vote on existing ones.', 'success');
+        });
+        
+        // Set up event listeners
+        function setupEventListeners() {
+            // Theme toggle
+            themeToggle.addEventListener('click', toggleTheme);
+            
+            // Tab switching
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    const tabId = tab.getAttribute('data-tab');
+                    showTab(tabId);
+                });
+            });
+            
+            // Navigation buttons
+            createPollBtn.addEventListener('click', () => showTab('create'));
+            viewPollsBtn.addEventListener('click', () => showTab('polls'));
+            
+            // Poll form
+            pollForm.addEventListener('submit', createPoll);
+            
+            // Add poll option
+            addOptionBtn.addEventListener('click', addPollOption);
+            
+            // Remove poll option (delegated)
+            pollOptions.addEventListener('click', function(e) {
+                if (e.target.closest('.remove-option')) {
+                    removePollOption(e.target.closest('.remove-option'));
+                }
+            });
+            
+            // Voting
+            submitVoteBtn.addEventListener('click', submitVote);
+            viewResultsBtn.addEventListener('click', function() {
+                if (currentPollId) {
+                    showTab('vote');
+                    displayPollResults(currentPollId);
+                }
+            });
+        }
+        
+        // Theme toggle function
+        function toggleTheme() {
+            document.body.classList.toggle('dark-mode');
+            const isDarkMode = document.body.classList.contains('dark-mode');
+            localStorage.setItem('theme', isDarkMode ? 'dark' : 'light');
+            
+            // Update chart if exists
+            if (chart) {
+                chart.destroy();
+                if (currentPollId) {
+                    displayPollResults(currentPollId);
+                }
+            }
+        }
+        
+        // Show tab function
+        function showTab(tabId) {
+            // Update active tab
+            tabs.forEach(tab => {
+                if (tab.getAttribute('data-tab') === tabId) {
+                    tab.classList.add('active');
+                } else {
+                    tab.classList.remove('active');
+                }
+            });
+            
+            // Show active tab content
+            tabContents.forEach(content => {
+                if (content.id === `${tabId}Tab`) {
+                    content.classList.add('active');
+                } else {
+                    content.classList.remove('active');
+                }
+            });
+            
+            // If viewing polls tab, refresh the list
+            if (tabId === 'polls') {
+                loadPolls();
+            }
+            
+            // If viewing vote tab, load the first poll if none selected
+            if (tabId === 'vote' && !currentPollId) {
+                const polls = getPolls();
+                if (polls.length > 0) {
+                    loadPollForVoting(polls[0].id);
+                }
+            }
+        }
+        
+        // Add poll option
+        function addPollOption() {
+            const optionCount = pollOptions.children.length;
+            const optionDiv = document.createElement('div');
+            optionDiv.className = 'poll-option';
+            optionDiv.innerHTML = `
+                <input type="text" class="input-field option-input" placeholder="Option ${optionCount + 1}" required>
+                <button type="button" class="btn btn-icon btn-danger remove-option">
+                    <i class="fas fa-times"></i>
+                </button>
+            `;
+            pollOptions.appendChild(optionDiv);
+            
+            // Enable remove buttons if more than 2 options
+            if (optionCount + 1 > 2) {
+                document.querySelectorAll('.remove-option').forEach(btn => {
+                    btn.disabled = false;
+                });
+            }
+        }
+        
+        // Remove poll option
+        function removePollOption(button) {
+            if (pollOptions.children.length > 2) {
+                const optionDiv = button.closest('.poll-option');
+                optionDiv.remove();
+                
+                // Disable remove buttons if only 2 options left
+                if (pollOptions.children.length === 2) {
+                    document.querySelectorAll('.remove-option').forEach(btn => {
+                        btn.disabled = true;
+                    });
+                }
+            }
+        }
+        
+        // Create a new poll
+        function createPoll(e) {
+            e.preventDefault();
+            
+            // Get poll question
+            const questionInput = document.getElementById('pollQuestion');
+            const question = questionInput.value.trim();
+            
+            if (!question) {
+                showToast('Please enter a poll question.', 'error');
+                questionInput.focus();
+                return;
+            }
+            
+            // Get poll options
+            const optionInputs = pollOptions.querySelectorAll('.option-input');
+            const options = [];
+            
+            optionInputs.forEach(input => {
+                const optionText = input.value.trim();
+                if (optionText) {
+                    options.push({
+                        text: optionText,
+                        votes: 0
+                    });
+                }
+            });
+            
+            if (options.length < 2) {
+                showToast('Please add at least 2 options.', 'error');
+                return;
+            }
+            
+            // Create poll object
+            const poll = {
+                id: Date.now().toString(),
+                question: question,
+                options: options,
+                totalVotes: 0,
+                createdAt: new Date().toISOString()
+            };
+            
+            // Save poll
+            savePoll(poll);
+            
+            // Reset form
+            pollForm.reset();
+            
+            // Reset to 2 options
+            while (pollOptions.children.length > 2) {
+                pollOptions.removeChild(pollOptions.lastChild);
+            }
+            
+            // Update UI
+            showToast('Poll created successfully!', 'success');
+            loadPolls();
+            showTab('polls');
+            
+            // Load this poll for voting
+            loadPollForVoting(poll.id);
+        }
+        
+        // Save poll to localStorage
+        function savePoll(poll) {
+            const polls = getPolls();
+            polls.unshift(poll); // Add to beginning
+            localStorage.setItem('polls', JSON.stringify(polls));
+        }
+        
+        // Get all polls from localStorage
+        function getPolls() {
+            const pollsJson = localStorage.getItem('polls');
+            return pollsJson ? JSON.parse(pollsJson) : [];
+        }
+        
+        // Load polls into the polls list
+        function loadPolls() {
+            const polls = getPolls();
+            
+            if (polls.length === 0) {
+                pollsList.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-poll-h"></i>
+                        <h3>No polls yet</h3>
+                        <p>Create your first poll to get started!</p>
+                        <button class="btn btn-primary" id="createFirstPollBtn">
+                            <i class="fas fa-plus-circle"></i> Create Poll
+                        </button>
+                    </div>
+                `;
+                
+                document.getElementById('createFirstPollBtn')?.addEventListener('click', () => {
+                    showTab('create');
+                });
+                return;
+            }
+            
+            pollsList.innerHTML = '';
+            
+            polls.forEach(poll => {
+                const pollElement = createPollElement(poll);
+                pollsList.appendChild(pollElement);
+            });
+        }
+        
+        // Load example polls
+        function loadExamplePolls() {
+            const polls = getPolls();
+            const examplePollIds = ['ex1', 'ex2', 'ex3'];
+            const examplePollsList = polls.filter(poll => examplePollIds.includes(poll.id));
+            
+            if (examplePollsList.length === 0) return;
+            
+            examplePolls.innerHTML = '';
+            
+            examplePollsList.forEach(poll => {
+                const pollElement = createPollElement(poll, true);
+                examplePolls.appendChild(pollElement);
+            });
+        }
+        
+        // Create a poll element for display
+        function createPollElement(poll, isExample = false) {
+            const pollElement = document.createElement('div');
+            pollElement.className = 'poll-card fade-in';
+            
+            // Format date
+            const date = new Date(poll.createdAt);
+            const formattedDate = date.toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric'
+            });
+            
+            pollElement.innerHTML = `
+                <div class="poll-question">${poll.question}</div>
+                <div class="poll-meta">
+                    <span><i class="fas fa-chart-bar"></i> ${poll.totalVotes} votes</span>
+                    <span><i class="far fa-calendar"></i> ${formattedDate}</span>
+                </div>
+                <div class="poll-actions">
+                    <button class="btn btn-primary btn-small vote-poll-btn" data-id="${poll.id}">
+                        <i class="fas fa-vote-yea"></i> ${isExample ? 'Try This Example' : 'Vote'}
+                    </button>
+                    <button class="btn btn-secondary btn-small view-results-btn" data-id="${poll.id}">
+                        <i class="fas fa-chart-pie"></i> Results
+                    </button>
+                    ${!isExample ? `<button class="btn btn-danger btn-small delete-poll-btn" data-id="${poll.id}">
+                        <i class="fas fa-trash"></i> Delete
+                    </button>` : ''}
+                </div>
+            `;
+            
+            // Add event listeners
+            const voteBtn = pollElement.querySelector('.vote-poll-btn');
+            const resultsBtn = pollElement.querySelector('.view-results-btn');
+            const deleteBtn = pollElement.querySelector('.delete-poll-btn');
+            
+            voteBtn.addEventListener('click', () => {
+                loadPollForVoting(poll.id);
+                showTab('vote');
+            });
+            
+            resultsBtn.addEventListener('click', () => {
+                loadPollForVoting(poll.id);
+                displayPollResults(poll.id);
+                showTab('vote');
+            });
+            
+            if (deleteBtn) {
+                deleteBtn.addEventListener('click', () => {
+                    deletePoll(poll.id);
+                });
+            }
+            
+            return pollElement;
+        }
+        
+        // Load a poll for voting
+        function loadPollForVoting(pollId) {
+            const polls = getPolls();
+            const poll = polls.find(p => p.id === pollId);
+            
+            if (!poll) return;
+            
+            currentPollId = pollId;
+            selectedOption = null;
+            
+            // Update question
+            voteQuestion.innerHTML = `<i class="fas fa-vote-yea"></i> ${poll.question}`;
+            
+            // Clear previous options
+            voteOptions.innerHTML = '';
+            
+            // Check if user has already voted
+            const userVotes = JSON.parse(localStorage.getItem('userVotes') || '{}');
+            const userVote = userVotes[pollId];
+            
+            // Create option elements
+            poll.options.forEach((option, index) => {
+                const optionElement = document.createElement('div');
+                optionElement.className = `vote-option ${userVote === index ? 'selected' : ''}`;
+                optionElement.innerHTML = `
+                    <input type="radio" name="voteOption" id="option${index}" value="${index}" 
+                           ${userVote === index ? 'checked' : ''}>
+                    <label for="option${index}">${option.text}</label>
+                `;
+                
+                optionElement.addEventListener('click', () => {
+                    if (!userVote) { // Only allow selection if user hasn't voted
+                        document.querySelectorAll('.vote-option').forEach(opt => {
+                            opt.classList.remove('selected');
+                        });
+                        optionElement.classList.add('selected');
+                        selectedOption = index;
+                    }
+                });
+                
+                voteOptions.appendChild(optionElement);
+            });
+            
+            // Update button text based on voting status
+            if (userVote !== undefined) {
+                submitVoteBtn.innerHTML = '<i class="fas fa-check"></i> Already Voted';
+                submitVoteBtn.disabled = true;
+                submitVoteBtn.classList.remove('btn-primary');
+                submitVoteBtn.classList.add('btn-secondary');
+            } else {
+                submitVoteBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Submit Vote';
+                submitVoteBtn.disabled = false;
+                submitVoteBtn.classList.remove('btn-secondary');
+                submitVoteBtn.classList.add('btn-primary');
+            }
+            
+            // Display results
+            displayPollResults(pollId);
+        }
+        
+        // Submit a vote
+        function submitVote() {
+            if (selectedOption === null) {
+                showToast('Please select an option to vote.', 'error');
+                return;
+            }
+            
+            const polls = getPolls();
+            const pollIndex = polls.findIndex(p => p.id === currentPollId);
+            
+            if (pollIndex === -1) return;
+            
+            // Update vote count
+            polls[pollIndex].options[selectedOption].votes++;
+            polls[pollIndex].totalVotes++;
+            
+            // Save updated polls
+            localStorage.setItem('polls', JSON.stringify(polls));
+            
+            // Record user vote to prevent multiple votes
+            const userVotes = JSON.parse(localStorage.getItem('userVotes') || '{}');
+            userVotes[currentPollId] = selectedOption;
+            localStorage.setItem('userVotes', JSON.stringify(userVotes));
+            
+            // Update UI
+            showToast('Your vote has been recorded!', 'success');
+            loadPollForVoting(currentPollId);
+            loadPolls();
+        }
+        
+        // Display poll results
+        function displayPollResults(pollId) {
+            const polls = getPolls();
+            const poll = polls.find(p => p.id === pollId);
+            
+            if (!poll) return;
+            
+            // Prepare data for chart
+            const labels = poll.options.map(option => option.text);
+            const data = poll.options.map(option => option.votes);
+            const colors = generateColors(poll.options.length);
+            
+            // Destroy previous chart
+            if (chart) {
+                chart.destroy();
+            }
+            
+            // Create new chart
+            const ctx = resultsChart.getContext('2d');
+            chart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Votes',
+                        data: data,
+                        backgroundColor: colors,
+                        borderColor: colors.map(color => color.replace('0.8', '1')),
+                        borderWidth: 2,
+                        borderRadius: 8,
+                        hoverBackgroundColor: colors.map(color => color.replace('0.8', '0.9'))
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const value = context.raw;
+                                    const total = poll.totalVotes;
+                                    const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : 0;
+                                    return `${value} votes (${percentage}%)`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                precision: 0,
+                                color: getComputedStyle(document.body).getPropertyValue('--dark-color')
+                            },
+                            grid: {
+                                color: getComputedStyle(document.body).getPropertyValue('--light-gray')
+                            }
+                        },
+                        x: {
+                            ticks: {
+                                color: getComputedStyle(document.body).getPropertyValue('--dark-color')
+                            },
+                            grid: {
+                                color: getComputedStyle(document.body).getPropertyValue('--light-gray')
+                            }
+                        }
+                    }
+                }
+            });
+            
+            // Update results list
+            resultsList.innerHTML = '';
+            
+            poll.options.forEach((option, index) => {
+                const percentage = poll.totalVotes > 0 ? ((option.votes / poll.totalVotes) * 100).toFixed(1) : 0;
+                
+                const resultItem = document.createElement('div');
+                resultItem.className = 'result-item fade-in';
+                resultItem.style.animationDelay = `${index * 0.1}s`;
+                resultItem.innerHTML = `
+                    <div class="result-label">
+                        <div style="width: 16px; height: 16px; border-radius: 4px; background-color: ${colors[index]};"></div>
+                        <span>${option.text}</span>
+                    </div>
+                    <div>
+                        <div style="width: 200px; max-width: 100%;">
+                            <div class="result-bar" style="width: ${percentage}%; background-color: ${colors[index]};"></div>
+                        </div>
+                        <div class="result-percentage">${percentage}% (${option.votes} votes)</div>
+                    </div>
+                `;
+                
+                resultsList.appendChild(resultItem);
+            });
+        }
+        
+        // Delete a poll
+        function deletePoll(pollId) {
+            if (!confirm('Are you sure you want to delete this poll? This action cannot be undone.')) {
+                return;
+            }
+            
+            const polls = getPolls();
+            const updatedPolls = polls.filter(poll => poll.id !== pollId);
+            localStorage.setItem('polls', JSON.stringify(updatedPolls));
+            
+            // Also remove user vote record for this poll
+            const userVotes = JSON.parse(localStorage.getItem('userVotes') || '{}');
+            delete userVotes[pollId];
+            localStorage.setItem('userVotes', JSON.stringify(userVotes));
+            
+            // Update UI
+            showToast('Poll deleted successfully.', 'success');
+            loadPolls();
+            
+            // If we deleted the current poll, load another one
+            if (currentPollId === pollId) {
+                const polls = getPolls();
+                if (polls.length > 0) {
+                    loadPollForVoting(polls[0].id);
+                } else {
+                    currentPollId = null;
+                    voteOptions.innerHTML = '<p class="empty-state">No polls available. Create one to get started!</p>';
+                }
+            }
+        }
+        
+        // Initialize example polls
+        function initializeExamplePolls() {
+            const examplePolls = [
+                {
+                    id: 'ex1',
+                    question: 'What is your favorite programming language for web development?',
+                    options: [
+                        { text: 'JavaScript', votes: 42 },
+                        { text: 'Python', votes: 28 },
+                        { text: 'TypeScript', votes: 35 },
+                        { text: 'PHP', votes: 15 },
+                        { text: 'Ruby', votes: 10 }
+                    ],
+                    totalVotes: 130,
+                    createdAt: '2023-10-15T08:30:00Z'
+                },
+                {
+                    id: 'ex2',
+                    question: 'Which social media platform do you use most frequently?',
+                    options: [
+                        { text: 'Instagram', votes: 55 },
+                        { text: 'Twitter / X', votes: 32 },
+                        { text: 'Facebook', votes: 28 },
+                        { text: 'TikTok', votes: 45 },
+                        { text: 'LinkedIn', votes: 20 }
+                    ],
+                    totalVotes: 180,
+                    createdAt: '2023-10-10T14:20:00Z'
+                },
+                {
+                    id: 'ex3',
+                    question: 'What is your preferred way to consume news?',
+                    options: [
+                        { text: 'Online news websites', votes: 40 },
+                        { text: 'Social media', votes: 35 },
+                        { text: 'TV broadcasts', votes: 25 },
+                        { text: 'Newspapers/Magazines', votes: 15 },
+                        { text: 'News apps', votes: 30 }
+                    ],
+                    totalVotes: 145,
+                    createdAt: '2023-10-05T11:45:00Z'
+                }
+            ];
+            
+            localStorage.setItem('polls', JSON.stringify(examplePolls));
+        }
+        
+        // Generate colors for charts
+        function generateColors(count) {
+            const baseColors = [
+                'rgba(67, 97, 238, 0.8)',    // Primary blue
+                'rgba(76, 201, 240, 0.8)',   // Accent cyan
+                'rgba(76, 222, 128, 0.8)',   // Success green
+                'rgba(245, 158, 11, 0.8)',   // Warning orange
+                'rgba(239, 68, 68, 0.8)',    // Danger red
+                'rgba(168, 85, 247, 0.8)',   // Purple
+                'rgba(236, 72, 153, 0.8)'    // Pink
+            ];
+            
+            const colors = [];
+            for (let i = 0; i < count; i++) {
+                colors.push(baseColors[i % baseColors.length]);
+            }
+            
+            return colors;
+        }
+        
+        // Show toast notification
+        function showToast(message, type = 'info') {
+            toastMessage.textContent = message;
+            toast.className = 'toast';
+            toast.classList.add(`toast-${type}`);
+            
+            // Trigger reflow for animation
+            void toast.offsetWidth;
+            
+            toast.classList.add('show');
+            
+            // Hide after 3 seconds
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
